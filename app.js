@@ -1,14 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
-const status = document.getElementById("status");
-function log(msg) {
-  const p = document.createElement("p");
-  p.textContent = msg;
-  document.body.appendChild(p);
-  console.log(msg);
-}
 
 const firebaseConfig = {
   apiKey: "AIzaSyBG1XuO_J_Mj_r1yTUhmjm6jehyYER0DzQ",
@@ -24,41 +16,33 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 const db = getFirestore(app);
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('firebase-messaging-sw.js')
-    .then((reg) => {
-      log("✅ Service Worker registrato.");
-    })
-    .catch((err) => {
-      log("❌ Errore SW: " + err.message);
-    });
-} else {
-  log("❌ Service Worker non supportato.");
-}
-
 Notification.requestPermission().then(permission => {
   if (permission === "granted") {
-    log("✅ Notifiche autorizzate.");
     getToken(messaging, {
       vapidKey: "BJdhliakBaY9byl_fKV_SWu9L9tOvWt0_pw_UL6ffOTxBVgW2R2lAOSG4iDXQQUI_z7L891T3YTwZOUfW7sWTpE"
     }).then((currentToken) => {
       if (currentToken) {
-        log("📲 Token: " + currentToken);
+        console.log("📲 Token:", currentToken);
         addDoc(collection(db, "tokens"), {
           token: currentToken,
           timestamp: new Date()
-        }).then(() => {
-          log("✅ Token salvato in Firestore.");
-        }).catch((e) => {
-          log("❌ Errore Firestore: " + e.message);
         });
       } else {
-        log("⚠️ Nessun token ricevuto.");
+        console.warn("⚠️ Nessun token disponibile.");
       }
     }).catch(err => {
-      log("❌ Errore getToken: " + err.message);
+      console.error("❌ Errore getToken:", err);
     });
   } else {
-    log("🔕 Notifiche bloccate.");
+    console.warn("🔕 Notifiche bloccate dall'utente.");
   }
+});
+
+// Mostra notifica anche con la PWA aperta
+onMessage(messaging, (payload) => {
+  const { title, body } = payload.notification;
+  new Notification(title, {
+    body: body,
+    icon: "/icon.png"
+  });
 });

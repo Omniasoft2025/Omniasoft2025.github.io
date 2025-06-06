@@ -16,6 +16,8 @@ messaging.onBackgroundMessage(function(payload) {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
+    tag: "notifica-unica",
+    renotify: true,
     data: {
       url: payload.fcmOptions?.link || "https://omniasoft.it"
     }
