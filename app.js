@@ -14,29 +14,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
+// Mostra info Service Worker
+function showStatus(message, isError = false) {
+  const p = document.createElement("p");
+  p.textContent = message;
+  p.style.fontSize = "14px";
+  p.style.wordBreak = "break-word";
+  p.style.padding = "10px";
+  p.style.backgroundColor = isError ? "#ffd6d6" : "#d6ffd6";
+  p.style.border = "1px solid #aaa";
+  p.style.marginTop = "20px";
+  document.body.appendChild(p);
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('firebase-messaging-sw.js')
+    .then((reg) => {
+      showStatus("✅ Service Worker registrato correttamente.");
+    })
+    .catch((err) => {
+      showStatus("❌ Errore registrazione Service Worker: " + err.message, true);
+    });
+} else {
+  showStatus("❌ Il browser non supporta i Service Worker", true);
+}
+
 Notification.requestPermission().then(permission => {
   if (permission === "granted") {
     getToken(messaging, {
       vapidKey: "BJdhliakBaY9byl_fKV_SWu9L9tOvWt0_pw_UL6ffOTxBVgW2R2lAOSG4iDXQQUI_z7L891T3YTwZOUfW7sWTpE"
     }).then((currentToken) => {
       if (currentToken) {
-        const p = document.createElement("p");
-        p.textContent = "📲 Il tuo token: " + currentToken;
-        p.style.fontSize = "12px";
-        p.style.wordBreak = "break-word";
-        p.style.padding = "10px";
-        p.style.backgroundColor = "#f0f0f0";
-        p.style.border = "1px solid #ccc";
-        p.style.marginTop = "20px";
-        document.body.appendChild(p);
+        showStatus("📲 Token ricevuto: " + currentToken);
       } else {
-        alert("⚠️ Nessun token disponibile.");
+        showStatus("⚠️ Nessun token disponibile.", true);
       }
     }).catch(err => {
-      alert("❌ Errore ottenendo token: " + err.message);
+      showStatus("❌ Errore ottenendo token: " + err.message, true);
       console.error(err);
     });
   } else {
-    alert("🔕 Permesso notifiche negato");
+    showStatus("🔕 Permesso notifiche negato", true);
   }
+});
+
+onMessage(messaging, (payload) => {
+  console.log("📩 Notifica ricevuta in foreground:", payload);
 });
