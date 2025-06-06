@@ -1,6 +1,6 @@
 {
-  "name": "Debug Beacon",
-  "short_name": "DebugPWA",
+  "name": "PWA Notifiche",
+  "short_name": "NotifichePWA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",

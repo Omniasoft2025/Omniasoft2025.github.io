@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBG1XuO_J_Mj_r1yTUhmjm6jehyYER0DzQ",
@@ -14,50 +14,30 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 
-// Mostra info Service Worker
-function showStatus(message, isError = false) {
-  const p = document.createElement("p");
-  p.textContent = message;
-  p.style.fontSize = "14px";
-  p.style.wordBreak = "break-word";
-  p.style.padding = "10px";
-  p.style.backgroundColor = isError ? "#ffd6d6" : "#d6ffd6";
-  p.style.border = "1px solid #aaa";
-  p.style.marginTop = "20px";
-  document.body.appendChild(p);
-}
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('firebase-messaging-sw.js')
-    .then((reg) => {
-      showStatus("✅ Service Worker registrato correttamente.");
-    })
-    .catch((err) => {
-      showStatus("❌ Errore registrazione Service Worker: " + err.message, true);
-    });
-} else {
-  showStatus("❌ Il browser non supporta i Service Worker", true);
-}
-
 Notification.requestPermission().then(permission => {
   if (permission === "granted") {
     getToken(messaging, {
       vapidKey: "BJdhliakBaY9byl_fKV_SWu9L9tOvWt0_pw_UL6ffOTxBVgW2R2lAOSG4iDXQQUI_z7L891T3YTwZOUfW7sWTpE"
     }).then((currentToken) => {
       if (currentToken) {
-        showStatus("📲 Token ricevuto: " + currentToken);
+        console.log("✅ Token ricevuto:", currentToken);
+        document.body.innerHTML += '<p>✅ Token salvato. Notifiche abilitate!</p>';
+
+        // Invia token a Google Apps Script Web App
+        fetch("https://script.google.com/macros/s/AKfycbx2pPwGEXaO8_LDHvbpeoUETxnu7sb9S8frFme55SSYiqw64QroVPofRi9tOlmz4IUz/exec", {
+          method: "POST",
+          body: JSON.stringify({ token: currentToken }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
       } else {
-        showStatus("⚠️ Nessun token disponibile.", true);
+        alert("⚠️ Nessun token disponibile.");
       }
     }).catch(err => {
-      showStatus("❌ Errore ottenendo token: " + err.message, true);
-      console.error(err);
+      alert("❌ Errore ottenendo token: " + err.message);
     });
   } else {
-    showStatus("🔕 Permesso notifiche negato", true);
+    alert("🔕 Permesso notifiche negato");
   }
-});
-
-onMessage(messaging, (payload) => {
-  console.log("📩 Notifica ricevuta in foreground:", payload);
 });
