@@ -1,6 +1,6 @@
 {
-  "name": "PWA Notifiche",
-  "short_name": "NotifichePWA",
+  "name": "Debug Notifiche",
+  "short_name": "DebugPWA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
